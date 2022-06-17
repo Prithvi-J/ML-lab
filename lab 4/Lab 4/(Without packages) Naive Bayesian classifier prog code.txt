@@ -1,0 +1,173 @@
+import math
+import csv
+import random
+
+
+
+# This make sures that the dataset is in an ordered format. If we have some arbirary names in that column it difficult to deal with that.
+
+def encode_class(dataset):
+  classes=[]
+  for i in range(len(dataset)):
+    if dataset[i][-1] not in classes:
+      classes.append(dataset[i][-1])
+  
+  # Looping across the classes which we have derived above.This will make sure that we have definitive classes (numeric) and not arbitrary
+  for i in range(len(classes)):
+    # Looping across all rows of dataset
+    for j in range(len(dataset)):
+      if dataset[j][-1] == classes[i]:
+        dataset[j][-1]=i
+  return dataset 
+
+
+
+
+# Splitting the data between training set and testing set. Normally its a general understanding the training:testing=7:3
+
+def train_test_split(dataset,ratio):
+  test_num=int(ratio*len(dataset))
+  train=list(dataset)
+  test=[]
+  for i in range(test_num):
+    rand=random.randrange(len(train))
+    test.append(train.pop(rand))
+  return train,test
+
+
+
+
+# Now depending on resultant value (last column values), we need to group the rows. It will be usefult for calculating mean and std_dev
+
+def groupUnderClass(train):
+  dict={}
+  for row in train:
+    if row[-1] not in dict:
+      dict[row[-1]]=[]
+    dict[row[-1]].append(row)
+  return dict
+
+
+
+
+# Standard formulae (just by-heart)
+
+def mean(val):
+  return sum(val)/float(len(val)) #Obvious
+
+def stdDev(val):
+  avg=mean(val)
+  variance=sum([pow(x-avg,2) for x in val])/float(len(val)-1) # Especially this one
+  return math.sqrt(variance)
+
+
+
+
+# We will calculte the mean and std dev with respect to each attribute. Important while calculating gaussian probablity
+
+def meanStdDev(instances):
+  info=[(mean(x),stdDev(x)) for x in zip(*instances)] # Here we are taking complete column's values of all instances.
+  del info[-1]
+  return info
+
+
+
+# As explained earlier why e need to group. We will be calculating the mean and std dev with respect each class.
+
+def MeanAndStdDevForClass(train):
+  info={}
+  dictionary=groupUnderClass(train)
+  # print(dictionary)
+  for key,value in dictionary.items():
+    # dictionary[key]=meanStdDev(value)
+    info[key]=meanStdDev(value) #Here value stands for a complete group.
+  return info
+
+
+
+# Its a formula by heart (no choice)
+
+def calculateGaussianProbablity(x,mean,std_dev):
+  expo = math.exp(-(math.pow(x - mean, 2) / (2 * math.pow(std_dev, 2))))
+  return (1 / (math.sqrt(2 * math.pi) * std_dev)) * expo
+
+
+
+
+# After calculating mean and std dev w.r.t training data now its time to check if the logic will work on testing data
+
+
+def calculateClassProbablities(info,ele):
+  probablities={}
+  for key,summaries in info.items(): # Info contains the groupName (key) and list of (mean,std_dev) for each attribute of that group
+    probablities[key]=1
+    for i in range(len(summaries)): #Loop across all attributes 
+      mean,std_dev=summaries[i]
+      x=ele[i] # Testing data's one instance's attribute value.
+      probablities[key] *= calculateGaussianProbablity(x, mean, std_dev)
+  return probablities
+
+
+
+
+def predict(info,ele):
+  probablities=calculateClassProbablities(info,ele) # returns a dictionary of probablities for each group
+  bestLabel,bestProb=None,-1
+  # Consider group name whichever gives you the highest probablities for this instance of testing data 
+  for key,prob in probablities.items():
+    if bestLabel==None or prob>bestProb:
+      bestProb=prob
+      bestLabel=key
+  return bestLabel
+
+
+
+
+
+
+
+
+# Loop across testing data and store the predicted result from our model in the list.
+
+def getPredictions(info,test):
+  predictions=[]
+  for ele in test:
+    result=predict(info,ele) # This will give you the group to which it will belong.
+    predictions.append(result)
+  return predictions
+
+
+
+
+
+
+def check_accuracy(predictions,test):
+  count=0
+  for i in range(len(test)):
+    if predictions[i]==test[i][-1]:
+      count+=1
+  return count/float(len(test))*100
+
+
+
+
+filename=r"C:\Users\Admin\OneDrive\Desktop\6th sem\ML\lab-ml\Lab 4\pima-indians-diabetes.csv"
+dataset=csv.reader(open(filename))
+dataset=list(dataset)
+dataset=encode_class(dataset)
+for i in range(len(dataset)):
+  dataset[i]=[float(x) for x in dataset[i]]
+
+ratio=0.3
+print(len(dataset))
+train,test=train_test_split(dataset,ratio)
+info=MeanAndStdDevForClass(train)
+
+predictions=getPredictions(info,test)
+accuracy=check_accuracy(predictions,test)
+accuracy
+
+
+
+
+
