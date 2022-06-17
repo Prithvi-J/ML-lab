@@ -1,0 +1,115 @@
++*In[1]:*+
+[source, ipython3]
+----
+import csv
+hypo = ['%','%','%','%','%','%'];
+
+with open(r'C:\Users\Admin\OneDrive\Desktop\6th sem\ML\lab-ml\lab 1\finds.csv') as csv_file:
+    readcsv = csv.reader(csv_file, delimiter=',')
+    print(readcsv)
+    
+    data = []
+    print("\nThe given training examples are:")
+    for row in readcsv:
+        print(row)
+        if row[len(row)-1].upper() == "YES":
+            data.append(row)
+----
+
+
++*Out[1]:*+
+----
+<_csv.reader object at 0x0000013B7E4DFD60>
+
+The given training examples are:
+['sky', 'air temp', 'humidity', 'wind', 'water', 'forecast', 'enjoy sport']
+['sunny', 'warm', 'normal', 'strong', 'warm', 'same', 'yes']
+['sunny', 'warm', 'high', 'strong', 'warm', 'same', 'yes']
+['rainy', 'cold', 'high', 'strong', 'warm', 'change', 'no']
+['sunny', 'warm', 'high', 'strong', 'cool', 'change', 'yes']
+----
+
+
++*In[2]:*+
+[source, ipython3]
+----
+print("\nThe positive examples are:");
+for x in data:
+    print(x);
+print("\n");
+----
+
+
++*Out[2]:*+
+----
+
+The positive examples are:
+['sunny', 'warm', 'normal', 'strong', 'warm', 'same', 'yes']
+['sunny', 'warm', 'high', 'strong', 'warm', 'same', 'yes']
+['sunny', 'warm', 'high', 'strong', 'cool', 'change', 'yes']
+
+
+----
+
+
++*In[3]:*+
+[source, ipython3]
+----
+TotalExamples = len(data);
+i=0;
+j=0;
+k=0;
+print("The steps of the Find-s algorithm are :\n",hypo);
+list = [];
+p=0;
+d=len(data[p])-1;
+for j in range(d):
+    list.append(data[i][j]);
+hypo=list;
+i=1;
+for i in range(TotalExamples):
+    for k in range(d):
+        if hypo[k]!=data[i][k]:
+            hypo[k]='?';
+            k=k+1;        
+        else:
+            hypo[k];
+    print(hypo);
+i=i+1;
+----
+
+
++*Out[3]:*+
+----
+The steps of the Find-s algorithm are :
+ ['%', '%', '%', '%', '%', '%']
+['sunny', 'warm', 'normal', 'strong', 'warm', 'same']
+['sunny', 'warm', '?', 'strong', 'warm', 'same']
+['sunny', 'warm', '?', 'strong', '?', '?']
+----
+
+
++*In[4]:*+
+[source, ipython3]
+----
+print("\nThe maximally specific Find-s hypothesis for the given training examples is :");
+list=[];
+for i in range(d):
+    list.append(hypo[i]);
+print(list);
+----
+
+
++*Out[4]:*+
+----
+
+The maximally specific Find-s hypothesis for the given training examples is :
+['sunny', 'warm', '?', 'strong', '?', '?']
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
