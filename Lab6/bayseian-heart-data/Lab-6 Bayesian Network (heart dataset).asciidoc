@@ -1,0 +1,251 @@
++*In[1]:*+
+[source, ipython3]
+----
+!pip install pgmpy
+----
+
+
++*Out[1]:*+
+----
+Defaulting to user installation because normal site-packages is not writeable
+Collecting pgmpy
+  Downloading pgmpy-0.1.18-py3-none-any.whl (1.9 MB)
+Requirement already satisfied: scipy in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.7.3)
+Requirement already satisfied: pyparsing in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (3.0.4)
+Requirement already satisfied: pandas in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.4.2)
+Collecting torch
+  Downloading torch-1.11.0-cp39-cp39-win_amd64.whl (157.9 MB)
+Requirement already satisfied: scikit-learn in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.0.2)
+Requirement already satisfied: numpy in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.21.5)
+Requirement already satisfied: tqdm in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (4.64.0)
+Requirement already satisfied: networkx in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (2.7.1)
+Requirement already satisfied: joblib in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.1.0)
+Requirement already satisfied: statsmodels in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (0.13.2)
+Requirement already satisfied: python-dateutil>=2.8.1 in c:\programdata\anaconda3\lib\site-packages (from pandas->pgmpy) (2.8.2)
+Requirement already satisfied: pytz>=2020.1 in c:\programdata\anaconda3\lib\site-packages (from pandas->pgmpy) (2021.3)
+Requirement already satisfied: six>=1.5 in c:\programdata\anaconda3\lib\site-packages (from python-dateutil>=2.8.1->pandas->pgmpy) (1.16.0)
+Requirement already satisfied: threadpoolctl>=2.0.0 in c:\programdata\anaconda3\lib\site-packages (from scikit-learn->pgmpy) (2.2.0)
+Requirement already satisfied: patsy>=0.5.2 in c:\programdata\anaconda3\lib\site-packages (from statsmodels->pgmpy) (0.5.2)
+Requirement already satisfied: packaging>=21.3 in c:\programdata\anaconda3\lib\site-packages (from statsmodels->pgmpy) (21.3)
+Requirement already satisfied: typing-extensions in c:\programdata\anaconda3\lib\site-packages (from torch->pgmpy) (4.1.1)
+Requirement already satisfied: colorama in c:\programdata\anaconda3\lib\site-packages (from tqdm->pgmpy) (0.4.4)
+Installing collected packages: torch, pgmpy
+Successfully installed pgmpy-0.1.18 torch-1.11.0
+
+  WARNING: The scripts convert-caffe2-to-onnx.exe, convert-onnx-to-caffe2.exe and torchrun.exe are installed in 'C:\Users\Admin\AppData\Roaming\Python\Python39\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+----
+
+
++*In[1]:*+
+[source, ipython3]
+----
+import numpy as np
+import pandas as pd
+import csv 
+import pgmpy
+from pgmpy.estimators import MaximumLikelihoodEstimator
+from pgmpy.models import BayesianModel
+from pgmpy.inference import VariableElimination
+----
+
+
++*In[6]:*+
+[source, ipython3]
+----
+#read Cleveland Heart Disease data
+heartDisease = pd.read_csv(r'C:\Users\Admin\OneDrive\Desktop\6th sem\ML\lab-ml\Lab 6\heart.csv')
+heartDisease = heartDisease.replace('?',np.nan)
+----
+
+
++*In[7]:*+
+[source, ipython3]
+----
+#display the data
+print('Sample instances from the dataset are given below')
+print(heartDisease.head())
+----
+
+
++*Out[7]:*+
+----
+Sample instances from the dataset are given below
+   Unnamed: 0   age  sex   cp  trestbps   chol  fbs  restecg  thalach  exang  \
+0         NaN  63.0  1.0  1.0     145.0  233.0  1.0      2.0    150.0    0.0   
+1         NaN  67.0  1.0  4.0     160.0  286.0  0.0      2.0    108.0    1.0   
+2         NaN  67.0  1.0  4.0     120.0  229.0  0.0      2.0    129.0    1.0   
+3         NaN  37.0  1.0  3.0     130.0  250.0  0.0      0.0    187.0    0.0   
+4         NaN  41.0  0.0  2.0     130.0  204.0  0.0      2.0    172.0    0.0   
+
+   ...  slope  ca thal heartdisease  Unnamed: 15  Unnamed: 16  Unnamed: 17  \
+0  ...    3.0   0    6          0.0          NaN          NaN          NaN   
+1  ...    2.0   3    3          2.0          NaN          NaN          NaN   
+2  ...    2.0   2    7          1.0          NaN          NaN          NaN   
+3  ...    3.0   0    3          0.0          NaN          NaN          NaN   
+4  ...    1.0   0    3          0.0          NaN          NaN          NaN   
+
+   Unnamed: 18  Unnamed: 19  Unnamed: 20  
+0          NaN          NaN          NaN  
+1          NaN          NaN          NaN  
+2          NaN          NaN          NaN  
+3          NaN          NaN          NaN  
+4          NaN          NaN          NaN  
+
+[5 rows x 21 columns]
+----
+
+
++*In[8]:*+
+[source, ipython3]
+----
+#display the Attributes names and datatyes
+print('\n Attributes and datatypes')
+print(heartDisease.dtypes)
+----
+
+
++*Out[8]:*+
+----
+
+ Attributes and datatypes
+Unnamed: 0      float64
+age             float64
+sex             float64
+cp              float64
+trestbps        float64
+chol            float64
+fbs             float64
+restecg         float64
+thalach         float64
+exang           float64
+oldpeak         float64
+slope           float64
+ca               object
+thal             object
+heartdisease    float64
+Unnamed: 15     float64
+Unnamed: 16     float64
+Unnamed: 17     float64
+Unnamed: 18     float64
+Unnamed: 19     float64
+Unnamed: 20     float64
+dtype: object
+----
+
+
++*In[9]:*+
+[source, ipython3]
+----
+#Creat Model-Bayesian Network 
+model =  BayesianModel([('age','heartdisease'),('sex','heartdisease'),('exang','heartdisease'),('cp','heartdisease'),('heartdisease','restecg'),('heartdisease','chol')])
+
+----
+
+
++*Out[9]:*+
+----
+C:\Users\Admin\AppData\Roaming\Python\Python39\site-packages\pgmpy\models\BayesianModel.py:8: FutureWarning: BayesianModel has been renamed to BayesianNetwork. Please use BayesianNetwork class, BayesianModel will be removed in future.
+  warnings.warn(
+----
+
+
++*In[10]:*+
+[source, ipython3]
+----
+#Learning CPDs using Maximum Likelihood Estimators
+print('\n Learning CPD using Maximum likelihood estimators')
+model.fit(heartDisease,estimator=MaximumLikelihoodEstimator)
+----
+
+
++*Out[10]:*+
+----
+
+ Learning CPD using Maximum likelihood estimators
+----
+
+
++*In[11]:*+
+[source, ipython3]
+----
+#Inferencing with Bayesian Network
+print('\n Inferencing with Bayesian Network:')
+HeartDiseasetest_infer = VariableElimination(model)
+----
+
+
++*Out[11]:*+
+----
+
+ Inferencing with Bayesian Network:
+----
+
+
++*In[12]:*+
+[source, ipython3]
+----
+#computing the Probability of HeartDisease given restecg
+print('\n 1.Probability of HeartDisease given evidence= restecg :1')
+q1=HeartDiseasetest_infer.query(variables=['heartdisease'],evidence={'restecg':1})
+print(q1)
+----
+
+
++*Out[12]:*+
+----
+
+ 1.Probability of HeartDisease given evidence= restecg :1
+  0%|          | 0/4 [00:00<?, ?it/s]  0%|          | 0/4 [00:00<?, ?it/s]
++-------------------+---------------------+
+| heartdisease      |   phi(heartdisease) |
++===================+=====================+
+| heartdisease(0.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(1.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(2.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(3.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(4.0) |              0.2000 |
++-------------------+---------------------+
+----
+
+
++*In[14]:*+
+[source, ipython3]
+----
+#computing the Probability of HeartDisease given cp
+print('\n 2.Probability of HeartDisease given evidence= cp:2 ')
+q2=HeartDiseasetest_infer.query(variables=['heartdisease'],evidence={'cp':2})
+print(q2)
+----
+
+
++*Out[14]:*+
+----
+
+ 2.Probability of HeartDisease given evidence= cp:2 
+  0%|          | 0/3 [00:00<?, ?it/s]  0%|          | 0/3 [00:00<?, ?it/s]
++-------------------+---------------------+
+| heartdisease      |   phi(heartdisease) |
++===================+=====================+
+| heartdisease(0.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(1.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(2.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(3.0) |              0.2000 |
++-------------------+---------------------+
+| heartdisease(4.0) |              0.2000 |
++-------------------+---------------------+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
