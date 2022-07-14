@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[18]:
+
+
+import pandas as pd
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import MinMaxScaler
+from matplotlib import pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+
+# In[19]:
+
+
+df = pd.read_csv(r'C:\Users\Admin\OneDrive\Desktop\6th sem\ML\lab-ml\Lab 7\income.csv')
+df.head(10)
+
+
+# In[20]:
+
+
+scaler = MinMaxScaler()
+scaler.fit(df[['Age']])
+df[['Age']] = scaler.transform(df[['Age']])
+
+scaler.fit(df[['Income($)']])
+df[['Income($)']] = scaler.transform(df[['Income($)']])
+df.head(10)
+
+
+# In[21]:
+
+
+plt.scatter(df['Age'], df['Income($)'])
+
+
+# In[22]:
+
+
+k_range = range(1, 11)
+sse = []
+for k in k_range:
+    kmc = KMeans(n_clusters=k)
+    kmc.fit(df[['Age', 'Income($)']])
+    sse.append(kmc.inertia_)
+sse
+
+
+# In[23]:
+
+
+plt.xlabel = 'Number of Clusters'
+plt.ylabel = 'Sum of Squared Errors'
+plt.plot(k_range, sse)
+
+Therefore, the elbow point is 3
+
+# In[24]:
+
+
+km = KMeans(n_clusters=3)
+km
+
+
+# In[25]:
+
+
+y_predict = km.fit_predict(df[['Age', 'Income($)']])
+y_predict
+
+
+# In[26]:
+
+
+df['cluster'] = y_predict
+df.head()
+
+
+# In[27]:
+
+
+df0 = df[df.cluster == 0]
+df0
+
+
+# In[28]:
+
+
+df1 = df[df.cluster == 1]
+df1
+
+
+# In[29]:
+
+
+df2 = df[df.cluster == 2]
+df2
+
+
+# In[30]:
+
+
+km.cluster_centers_
+
+
+# In[34]:
+
+
+p1 = plt.scatter(df0['Age'], df0['Income($)'], marker='+', color='red')
+p2 = plt.scatter(df1['Age'], df1['Income($)'], marker='*', color='blue')
+p3 = plt.scatter(df2['Age'], df2['Income($)'], marker='^', color='green')
+c = plt.scatter(km.cluster_centers_[:,0], km.cluster_centers_[:,1], color='black')
+plt.legend((p1, p2, p3, c),
+          ('Cluster 1', 'Cluster 2', 'Cluster 3', 'Centroid'))
+
+
+# In[ ]:
+
+
+
+
