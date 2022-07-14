@@ -1,0 +1,217 @@
++*In[1]:*+
+[source, ipython3]
+----
+!pip install pgmpy
+----
+
+
++*Out[1]:*+
+----
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: pgmpy in c:\users\admin\appdata\roaming\python\python39\site-packages (0.1.18)
+Requirement already satisfied: scikit-learn in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.0.2)
+Requirement already satisfied: torch in c:\users\admin\appdata\roaming\python\python39\site-packages (from pgmpy) (1.11.0)
+Requirement already satisfied: pandas in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.4.2)
+Requirement already satisfied: networkx in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (2.7.1)
+Requirement already satisfied: numpy in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.21.5)
+Requirement already satisfied: pyparsing in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (3.0.4)
+Requirement already satisfied: statsmodels in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (0.13.2)
+Requirement already satisfied: joblib in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.1.0)
+Requirement already satisfied: tqdm in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (4.64.0)
+Requirement already satisfied: scipy in c:\programdata\anaconda3\lib\site-packages (from pgmpy) (1.7.3)
+Requirement already satisfied: python-dateutil>=2.8.1 in c:\programdata\anaconda3\lib\site-packages (from pandas->pgmpy) (2.8.2)
+Requirement already satisfied: pytz>=2020.1 in c:\programdata\anaconda3\lib\site-packages (from pandas->pgmpy) (2021.3)
+Requirement already satisfied: six>=1.5 in c:\programdata\anaconda3\lib\site-packages (from python-dateutil>=2.8.1->pandas->pgmpy) (1.16.0)
+Requirement already satisfied: threadpoolctl>=2.0.0 in c:\programdata\anaconda3\lib\site-packages (from scikit-learn->pgmpy) (2.2.0)
+Requirement already satisfied: patsy>=0.5.2 in c:\programdata\anaconda3\lib\site-packages (from statsmodels->pgmpy) (0.5.2)
+Requirement already satisfied: packaging>=21.3 in c:\programdata\anaconda3\lib\site-packages (from statsmodels->pgmpy) (21.3)
+Requirement already satisfied: typing-extensions in c:\programdata\anaconda3\lib\site-packages (from torch->pgmpy) (4.1.1)
+Requirement already satisfied: colorama in c:\programdata\anaconda3\lib\site-packages (from tqdm->pgmpy) (0.4.4)
+----
+
+
++*In[2]:*+
+[source, ipython3]
+----
+# Starting with defining the network structure
+from pgmpy.models import BayesianModel
+from pgmpy.factors.discrete import TabularCPD
+from pgmpy.inference import VariableElimination
+----
+
+
++*In[3]:*+
+[source, ipython3]
+----
+#Define a Structure with nodes and edges
+cancer_model = BayesianModel([('Pollution', 'Cancer'), 
+                              ('Smoker', 'Cancer'),
+                              ('Cancer', 'Xray'),
+                              ('Cancer', 'Dyspnoea')])
+print('Bayesian network nodes:')
+print('\t', cancer_model.nodes())
+print('Bayesian network edges:')
+print('\t', cancer_model.edges())
+----
+
+
++*Out[3]:*+
+----
+Bayesian network nodes:
+	 ['Pollution', 'Cancer', 'Smoker', 'Xray', 'Dyspnoea']
+Bayesian network edges:
+	 [('Pollution', 'Cancer'), ('Cancer', 'Xray'), ('Cancer', 'Dyspnoea'), ('Smoker', 'Cancer')]
+
+C:\Users\Admin\AppData\Roaming\Python\Python39\site-packages\pgmpy\models\BayesianModel.py:8: FutureWarning: BayesianModel has been renamed to BayesianNetwork. Please use BayesianNetwork class, BayesianModel will be removed in future.
+  warnings.warn(
+----
+
+
++*In[4]:*+
+[source, ipython3]
+----
+#Creation of Conditional Probability Table
+cpd_poll = TabularCPD(variable='Pollution', variable_card=2,
+                      values=[[0.9], [0.1]])
+cpd_smoke = TabularCPD(variable='Smoker', variable_card=2,
+                       values=[[0.3], [0.7]])
+cpd_cancer = TabularCPD(variable='Cancer', variable_card=2,
+                        values=[[0.03, 0.05, 0.001, 0.02],
+                                [0.97, 0.95, 0.999, 0.98]],
+                        evidence=['Smoker', 'Pollution'],
+                        evidence_card=[2, 2])
+cpd_xray = TabularCPD(variable='Xray', variable_card=2,
+                      values=[[0.9, 0.2], [0.1, 0.8]],
+                      evidence=['Cancer'], evidence_card=[2])
+cpd_dysp = TabularCPD(variable='Dyspnoea', variable_card=2,
+                      values=[[0.65, 0.3], [0.35, 0.7]],
+                      evidence=['Cancer'], evidence_card=[2])
+----
+
+
++*In[5]:*+
+[source, ipython3]
+----
+# Associating the parameters with the model structure.
+cancer_model.add_cpds(cpd_poll, cpd_smoke, cpd_cancer, cpd_xray, cpd_dysp)
+print('Model generated bt adding conditional probability distribution(cpds)')
+
+# Checking if the cpds are valid for the model.
+print('Checking for Correctness of model:', end='')
+print(cancer_model.check_model())
+----
+
+
++*Out[5]:*+
+----
+Model generated bt adding conditional probability distribution(cpds)
+Checking for Correctness of model:True
+----
+
+
++*In[6]:*+
+[source, ipython3]
+----
+'''print('All local dependencies are as follows')
+cancer_model.get_independencies()
+'''
+
+print('Displaying CPDs')
+print(cancer_model.get_cpds('Pollution'))
+print(cancer_model.get_cpds('Smoker'))
+print(cancer_model.get_cpds('Cancer'))
+print(cancer_model.get_cpds('Xray'))
+print(cancer_model.get_cpds('Dyspnoea'))
+----
+
+
++*Out[6]:*+
+----
+Displaying CPDs
++--------------+-----+
+| Pollution(0) | 0.9 |
++--------------+-----+
+| Pollution(1) | 0.1 |
++--------------+-----+
++-----------+-----+
+| Smoker(0) | 0.3 |
++-----------+-----+
+| Smoker(1) | 0.7 |
++-----------+-----+
++-----------+--------------+--------------+--------------+--------------+
+| Smoker    | Smoker(0)    | Smoker(0)    | Smoker(1)    | Smoker(1)    |
++-----------+--------------+--------------+--------------+--------------+
+| Pollution | Pollution(0) | Pollution(1) | Pollution(0) | Pollution(1) |
++-----------+--------------+--------------+--------------+--------------+
+| Cancer(0) | 0.03         | 0.05         | 0.001        | 0.02         |
++-----------+--------------+--------------+--------------+--------------+
+| Cancer(1) | 0.97         | 0.95         | 0.999        | 0.98         |
++-----------+--------------+--------------+--------------+--------------+
++---------+-----------+-----------+
+| Cancer  | Cancer(0) | Cancer(1) |
++---------+-----------+-----------+
+| Xray(0) | 0.9       | 0.2       |
++---------+-----------+-----------+
+| Xray(1) | 0.1       | 0.8       |
++---------+-----------+-----------+
++-------------+-----------+-----------+
+| Cancer      | Cancer(0) | Cancer(1) |
++-------------+-----------+-----------+
+| Dyspnoea(0) | 0.65      | 0.3       |
++-------------+-----------+-----------+
+| Dyspnoea(1) | 0.35      | 0.7       |
++-------------+-----------+-----------+
+----
+
+
++*In[7]:*+
+[source, ipython3]
+----
+#Inferencing with Bayesian Network
+#Computing the probability of Cancer given smoke
+
+cancer_infer = VariableElimination(cancer_model)
+print('\nInferencing with Bayesian Network')
+
+print('\nProbability of Cancer given Smoker')
+q = cancer_infer.query(variables=['Cancer'], evidence={'Smoker': 1})
+print(q)
+
+print('\nProbability of Cancer given Smoker, Pollution')
+q = cancer_infer.query(variables=['Cancer'], evidence={'Smoker': 1,'Pollution': 1})
+print(q)
+----
+
+
++*Out[7]:*+
+----
+
+Inferencing with Bayesian Network
+
+Probability of Cancer given Smoker
+  0%|          | 0/1 [00:00<?, ?it/s]  0%|          | 0/1 [00:00<?, ?it/s]
++-----------+---------------+
+| Cancer    |   phi(Cancer) |
++===========+===============+
+| Cancer(0) |        0.0029 |
++-----------+---------------+
+| Cancer(1) |        0.9971 |
++-----------+---------------+
+
+Probability of Cancer given Smoker, Pollution
+0it [00:00, ?it/s]0it [00:00, ?it/s]
++-----------+---------------+
+| Cancer    |   phi(Cancer) |
++===========+===============+
+| Cancer(0) |        0.0200 |
++-----------+---------------+
+| Cancer(1) |        0.9800 |
++-----------+---------------+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
