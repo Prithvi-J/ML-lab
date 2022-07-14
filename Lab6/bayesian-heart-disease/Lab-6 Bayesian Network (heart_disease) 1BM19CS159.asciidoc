@@ -1,0 +1,171 @@
++*In[1]:*+
+[source, ipython3]
+----
+!pip install bayespy
+----
+
+
++*Out[1]:*+
+----
+Defaulting to user installation because normal site-packages is not writeable
+Collecting bayespy
+  Downloading bayespy-0.5.22.tar.gz (490 kB)
+Requirement already satisfied: numpy>=1.10.0 in c:\programdata\anaconda3\lib\site-packages (from bayespy) (1.21.5)
+Requirement already satisfied: scipy>=0.13.0 in c:\programdata\anaconda3\lib\site-packages (from bayespy) (1.7.3)
+Requirement already satisfied: h5py in c:\programdata\anaconda3\lib\site-packages (from bayespy) (3.6.0)
+Building wheels for collected packages: bayespy
+  Building wheel for bayespy (setup.py): started
+  Building wheel for bayespy (setup.py): finished with status 'done'
+  Created wheel for bayespy: filename=bayespy-0.5.22-py3-none-any.whl size=379454 sha256=5e83889d5cd79371d5456950bc6e50be36b085b60b7c4a71b4e5e1fe99169853
+  Stored in directory: c:\users\admin\appdata\local\pip\cache\wheels\71\1f\01\0bf4461db21a3ce88a441a08de5f3618151f25bdf85c297753
+Successfully built bayespy
+Installing collected packages: bayespy
+Successfully installed bayespy-0.5.22
+----
+
+
++*In[2]:*+
+[source, ipython3]
+----
+import bayespy as bp
+import numpy as np
+import csv
+!pip3 install colorama
+!pip3 install colorama
+from colorama import init
+from colorama import Fore, Back, Style
+init()
+
+# Define Parameter Enum values
+# Age
+ageEnum = {'SuperSeniorCitizen': 0, 'SeniorCitizen': 1,
+           'MiddleAged': 2, 'Youth': 3, 'Teen': 4}
+# Gender
+genderEnum = {'Male': 0, 'Female': 1}
+# FamilyHistory
+familyHistoryEnum = {'Yes': 0, 'No': 1}
+# Diet(Calorie Intake)
+dietEnum = {'High': 0, 'Medium': 1, 'Low': 2}
+# LifeStyle
+lifeStyleEnum = {'Athlete': 0, 'Active': 1, 'Moderate': 2, 'Sedetary': 3}
+# Cholesterol
+cholesterolEnum = {'High': 0, 'BorderLine': 1, 'Normal': 2}
+# HeartDisease
+heartDiseaseEnum = {'Yes': 0, 'No': 1}
+----
+
+
++*Out[2]:*+
+----
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: colorama in c:\programdata\anaconda3\lib\site-packages (0.4.4)
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: colorama in c:\programdata\anaconda3\lib\site-packages (0.4.4)
+----
+
+
++*In[9]:*+
+[source, ipython3]
+----
+import pandas as pd
+----
+
+
++*In[10]:*+
+[source, ipython3]
+----
+data = pd.read_csv(r"C:\Users\Admin\OneDrive\Desktop\6th sem\ML\lab-ml\Lab 6\Bayesian network- heart_disease\heart_disease_data.csv")
+----
+
+
++*In[11]:*+
+[source, ipython3]
+----
+data =np.array(data, dtype='int8')
+N = len(data)
+----
+
+
++*In[12]:*+
+[source, ipython3]
+----
+# Input data column assignment
+p_age = bp.nodes.Dirichlet(1.0*np.ones(5))
+age = bp.nodes.Categorical(p_age, plates=(N,))
+age.observe(data[:, 0])
+
+p_gender = bp.nodes.Dirichlet(1.0*np.ones(2))
+gender = bp.nodes.Categorical(p_gender, plates=(N,))
+gender.observe(data[:, 1])
+
+p_familyhistory = bp.nodes.Dirichlet(1.0*np.ones(2))
+familyhistory = bp.nodes.Categorical(p_familyhistory, plates=(N,))
+familyhistory.observe(data[:, 2])
+
+p_diet = bp.nodes.Dirichlet(1.0*np.ones(3))
+diet = bp.nodes.Categorical(p_diet, plates=(N,))
+diet.observe(data[:, 3])
+
+p_lifestyle = bp.nodes.Dirichlet(1.0*np.ones(4))
+lifestyle = bp.nodes.Categorical(p_lifestyle, plates=(N,))
+lifestyle.observe(data[:, 4])
+
+p_cholesterol = bp.nodes.Dirichlet(1.0*np.ones(3))
+cholesterol = bp.nodes.Categorical(p_cholesterol, plates=(N,))
+cholesterol.observe(data[:, 5])
+----
+
+
++*In[13]:*+
+[source, ipython3]
+----
+# Prepare nodes and establish edges
+# np.ones(2) -> HeartDisease has 2 options Yes/No
+# plates(5, 2, 2, 3, 4, 3) -> corresponds to options present for domain values
+p_heartdisease = bp.nodes.Dirichlet(np.ones(2), plates=(5, 2, 2, 3, 4, 3))
+heartdisease = bp.nodes.MultiMixture(
+    [age, gender, familyhistory, diet, lifestyle, cholesterol], bp.nodes.Categorical, p_heartdisease)
+heartdisease.observe(data[:, 6])
+p_heartdisease.update()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#print("Sample Probability")
+#print("Probability(HeartDisease|Age=SuperSeniorCitizen, Gender=Female, FamilyHistory=Yes, DietIntake=Medium, LifeStyle=Sedetary, Cholesterol=High)") 
+#print(bp.nodes.MultiMixture([ageEnum['SuperSeniorCitizen'], genderEnum['Female'], familyHistoryEnum['Yes'], dietEnum['Medium'], lifeStyleEnum['Sedetary'], cholesterolEnum['High']], bp.nodes.Categorical, p_heartdisease).get_moments()[0] [heartDiseaseEnum['Yes']])
+
+# Interactive Test
+m = 0
+while m == 0:
+    print("\n")
+    res = bp.nodes.MultiMixture([int(input('Enter Age: ' + str(ageEnum))), int(input('Enter Gender: ' + str(genderEnum))), int(input('Enter FamilyHistory: ' + str(familyHistoryEnum))), int(input('Enter dietEnum: ' + str(
+        dietEnum))), int(input('Enter LifeStyle: ' + str(lifeStyleEnum))), int(input('Enter Cholesterol: ' + str(cholesterolEnum)))], bp.nodes.Categorical, p_heartdisease).get_moments()[0][heartDiseaseEnum['Yes']]
+    print("Probability(HeartDisease) = " + str(res))
+
+# print(Style.RESET_ALL)
+    m = int(input("Enter for Continue:0, Exit :1 "))
+----
+
+
++*Out[ ]:*+
+----
+
+
+Enter Age: {'SuperSeniorCitizen': 0, 'SeniorCitizen': 1, 'MiddleAged': 2, 'Youth': 3, 'Teen': 4}4
+Enter Gender: {'Male': 0, 'Female': 1}0
+Enter FamilyHistory: {'Yes': 0, 'No': 1}0
+Enter dietEnum: {'High': 0, 'Medium': 1, 'Low': 2}1
+Enter LifeStyle: {'Athlete': 0, 'Active': 1, 'Moderate': 2, 'Sedetary': 3}1
+Enter Cholesterol: {'High': 0, 'BorderLine': 1, 'Normal': 2}2
+Probability(HeartDisease) = 0.5
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
